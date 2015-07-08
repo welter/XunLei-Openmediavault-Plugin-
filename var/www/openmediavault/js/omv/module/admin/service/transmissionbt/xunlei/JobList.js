@@ -237,7 +237,7 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei.JobList", {
             this.store.removeAll();
         }
     },
-
+  
     getTopToolbarItems: function() {
         var items = this.callParent(arguments);
 
@@ -341,7 +341,7 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei.JobList", {
         // 4: Downloading
         // 5: Queued to seed
         // 6: Seeding
-        if (status === 0 && button.action === "resume") {
+        if ((status === 9  || status === 10) && button.action === "resume") {
             return true;
         }
 
@@ -391,7 +391,8 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei.JobList", {
     },
 
     onUploadButton: function() {
-        Ext.create("OMV.window.Upload", {
+    	 var me=this;
+        me.uploadWindow=Ext.create("OMV.window.Upload", {
             title: _("Upload torrent"),
             service: "TransmissionBt",
             method: "uploadTorrent",
@@ -401,7 +402,14 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei.JobList", {
                     this.doReload();
                 }
             }
-        }).show();
+        });
+        var b=me.uploadWindow.fp.items;
+        b.add(Ext.create("Ext.form.field.File"));
+        b.items[0].on("change",this.onUploadChange,this);
+        me.uploadWindow.show();
+    },
+    onUploadChange:function (){
+    	t=1;
     },
 
     onDeleteButton: function() {

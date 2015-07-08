@@ -26,7 +26,7 @@
 // require("js/omv/module/admin/service/transmissionbt/xunlei_util/Format.js")
 // require("js/omv/module/admin/service/transmissionbt/torrents/window/AddTorrent.js")
 // require("js/omv/module/admin/service/transmissionbt/torrents/window/DeleteTorrent.js")
-
+// require("js/omv/module/admin/service/transmissionbt/xunlei_util/Upload.js")
 Ext.define("OMV.module.admin.service.transmissionbt.xunlei.JobList", {
     extend: "OMV.workspace.grid.Panel",
     requires: [
@@ -36,7 +36,8 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei.JobList", {
         "OMV.module.admin.service.transmissionbt.util.Format",
         "OMV.module.admin.service.transmissionbt.xunlei_util.Format",
         "OMV.module.admin.service.transmissionbt.torrents.window.AddTorrent",
-        "OMV.module.admin.service.transmissionbt.torrents.window.DeleteTorrent"
+        "OMV.module.admin.service.transmissionbt.torrents.window.DeleteTorrent",
+        "OMV.module.admin.service.transmissionbt.xunlei_util.Upload"
     ],
 
     autoReload: true,
@@ -392,7 +393,7 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei.JobList", {
 
     onUploadButton: function() {
     	 var me=this;
-        me.uploadWindow=Ext.create("OMV.window.Upload", {
+        me.uploadWindow=Ext.create("OMV.module.admin.service.transmissionbt.xunlei_util.Upload", {
             title: _("Upload torrent"),
             service: "TransmissionBt",
             method: "uploadTorrent",
@@ -404,7 +405,7 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei.JobList", {
             }
         });
         var b=me.uploadWindow.fp.items;
-        b.add(Ext.create("Ext.form.field.File"));
+//        b.add(Ext.create("Ext.form.field.File"));
         b.items[0].on("change",this.onUploadChange,this);
         me.uploadWindow.show();
     },

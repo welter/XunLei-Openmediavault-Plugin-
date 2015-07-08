@@ -31,7 +31,7 @@
  * @param title The dialog title.
  * @param waitMsg The displayed waiting message.
  */
-Ext.define("OMV.window.Upload", {
+Ext.define("OMV.module.admin.service.transmissionbt.xunlei_util.Upload", {
 	extend: "OMV.window.Window",
 	requires: [
 		"OMV.form.Panel",
@@ -40,7 +40,8 @@ Ext.define("OMV.window.Upload", {
 	url: "upload.php",
 	title: _("Upload file"),
 	waitMsg: _("Uploading file ..."),
-	width: 450,
+	width: 550,
+	height: 300,
 	layout: "fit",
 	modal: true,
 	buttonAlign: "center",
@@ -68,7 +69,7 @@ Ext.define("OMV.window.Upload", {
 				handler: me.onCancelButton,
 				scope: me
 			}],
-			items: [ me.fp = Ext.create("OMV.form.Panel", {
+			items: [ me.fp = /*Ext.create("OMV.form.Panel", {
 				bodyPadding: "5 5 0",
 				items: [{
 					xtype: "filefield",
@@ -76,7 +77,36 @@ Ext.define("OMV.window.Upload", {
 					fieldLabel: _("File"),
 					allowBlank: false
 				}]
-			}) ]
+			}) ,*/
+			Ext.create("Ext.tab.Panel",{
+				bodyPadding: "5 5 0",
+			   items:[{
+			       title:_("new common task"),
+			       items:[{
+			       	xtype:"filefield",
+			       	name: "file",
+			       	width: 500,
+					   fieldLabel: _("File"),
+					   allowBlank: false
+			       }
+			       ]
+			   },{
+			       title:_("open local torrent"),
+			       items:[
+			       Ext.create("Ext.form.Panel",{
+			       	border:false,
+			          items:[{
+			          	xtype:"filefield",
+			          	name: "file2",
+			          	width: 500,
+					      fieldLabel: _("File"),
+					      allowBlank: false
+			          }
+			          ]
+			       })
+			       ]
+			   }]   
+			})]
 		});
 		me.callParent(arguments);
 	},

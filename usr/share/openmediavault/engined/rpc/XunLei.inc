@@ -22,6 +22,8 @@
 require_once "openmediavault/error.inc";
 require_once "openmediavault/notify.inc";
 require_once "openmediavault/object.inc";
+require_once("openmediavault/system.inc");
+require_once("openmediavault/functions.inc");
 require_once "openmediavault/rpc.inc";
 require_once "openmediavault/util.inc";
 require_once "xunlei/IXWareClient.php";
@@ -96,6 +98,7 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
         $this->registerMethod("serverIsRunning");
         $this->registerMethod("getJobList");
         $this->registerMethod("addTorrent");
+        $this->registerMethod("getBoxSpace");
         $this->registerMethod("uploadTorrent");
         $this->registerMethod("deleteTorrent");
         $this->registerMethod("pauseTorrent");
@@ -311,6 +314,40 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
                      "mntentref"=>$objectv['mntentref'],
                      "actualfolder"=>$objectv['actualfolder'],
                      "simulatedfolder"=>intval($objectv['simulatedfolder']));
+            $xpath = sprintf("//system/fstab/mntent[uuid='%s']",
+            		$objectv['mntentref']);
+            // $xpath = "//system/fstab/mntent[not(contains(opts,'bind'))]";
+            $objects = $xmlConfig->get($xpath);
+            if (is_null($objects)) {
+            	throw new OMVException(OMVErrorMsg::E_CONFIG_GET_OBJECT_FAILED,
+            			$xpath);
+            }
+            // Get the filesystem details for each mount point.
+            $fs = OMVFilesystemFactory::get($objects['fsname']);
+            if (is_null($fs) || !$fs->exists()) {
+            	//				throw new OMVException(OMVErrorMsg::E_MISC_FAILURE,
+            	//				  sprintf(gettext("Filesystem '%s' not found"),
+            	//				  $objectv['fsname']));
+            	continue;
+            }
+            	// Skip the filesystems that are not mounted at the moment.
+            	if (FALSE === $fs->isMounted())
+            		continue;
+            		// Get some filesystem details.
+            		$devicefile = $fs->getDeviceFile();
+            		$label = $fs->getLabel();
+            		// Prepare result object.
+           		    $o["description"] = !empty($label) ? $label : $devicefile;
+           		    $o['available']=-1;
+           		    $o['percentage']=-1;
+            				// Get some more filesystem details if possible.
+        	        if (FALSE !== ($fsStats = $fs->getStatistics())) {
+                    	$o['description'] = sprintf(
+                    	gettext("%s (%s available)"), $o['description'],
+                    	binary_format($fsStats['available']));
+                    	$o['available']=$fsStats['available'];
+                    	$o['percentage']=$fsStats['percentage'];
+                    	}
             $result[]=$o;
         }
         if (is_null($result)) {
@@ -318,7 +355,7 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
                 OMVErrorMsg::E_CONFIG_GET_OBJECT_FAILED,
                 $this->getDownloadfoldersXPath()
             );
-        }
+        }        
 
         return $result;
     }
@@ -578,12 +615,12 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
         $result=array();
         foreach($object as $objectv){
           $o=array("availableDriver"=>$objectv,
-                   "driverPath"=>chr(intval($objectv)+66).':\TDDOWNLOAD');
+                   "driverPath"=>chr(intval($objectv)+66).':\\');
           $result[]=$o;
         }
         if (intval($params)>0 && !in_array($params,$object,false)) {
             $result[]=array("availableDriver"=>intval($params),
-                   "driverPath"=>chr(intval($params)+66).':\TDDOWNLOAD');
+                   "driverPath"=>chr(intval($params)+66).':\\');
         }  
         return $result;
     }
@@ -691,8 +728,8 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
                 }
             }'
         );
-            $server = $this->xwareClientFactory();
-        $server->openVipChannel($params["id"]);
+            $client = $this->xwareClientFactory();
+        $client->openVipChannel($params["id"]);
     }
 
     /**
@@ -721,8 +758,8 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
                 }
             }'
         );
-         $server = $this->xwareClientFactory();
-         $server->openLixianChannel($params["id"]);
+         $client = $this->xwareClientFactory();
+         $client->openLixianChannel($params["id"]);
     }
 
     /**
@@ -999,12 +1036,12 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
                 }
             }'
         );*/
-        $server = $this->xwareClientFactory();
+        $client = $this->xwareClientFactory();
 //        return "kkkkkkk";
         
         $jobs= array();
 
-        foreach ($server->getJobs() as $job) {
+        foreach ($client->getJobs() as $job) {
         	  $liXianChannel=$job->getLiXianChannel();
         	  $VipChannel=$job->getVipChannel();
         	  //var_dump($liXianChannel);
@@ -1070,14 +1107,24 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
             }'
         );
 
-        $server = $this->xwareClientFactory();
+        $client = $this->xwareClientFactory();
 
         $url = $params["url"];
         $paused = !boolval($params["start_download"]);
 
-        return $server->add($url, $paused);
+        return $client->add($url, $paused);
     }
-
+    public function getBoxSpace($params,$context)
+{
+	// Validate the RPC caller context.
+	$this->validateMethodContext($context, array(
+			"role" => OMV_ROLE_ADMINISTRATOR
+	));
+	
+	// Validate the parameters of the RPC service method.
+	$client = $this->xwareClientFactory();
+	return $client->getBoxSpace();	
+}
     public function uploadTorrent($params, $context)
     {
         // Validate the RPC caller context.
@@ -1101,9 +1148,9 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
             }'
         );
 
-        $server = $this->xwareClientFactory();
+        $client = $this->xwareClientFactory();
 
-        return $server->add($params["filepath"]);
+        return $client->add($params["filepath"]);
     }
 
     public function deleteTorrent($params, $context)
@@ -1130,12 +1177,12 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
             }'
         );
 
-        $server = $this->xwareClientFactory();
+        $client = $this->xwareClientFactory();
 
         $torrent = $params["id"];
         $deleteLocalData = boolval($params["delete_local_data"]);
 
-        $server->delete($torrent, $deleteLocalData);
+        $client->delete($torrent, $deleteLocalData);
     }
 
     public function pauseTorrent($params, $context)
@@ -1159,8 +1206,8 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
             }'
         );
 
-        $server = $this->xwareClientFactory();
-        $server->pause($params["id"]);
+        $client = $this->xwareClientFactory();
+        $client->pause($params["id"]);
     }
 
     public function resumeTorrent($params, $context)
@@ -1184,8 +1231,8 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
             }'
         );
 
-        $server = $this->xwareClientFactory();
-        $server->resume($params["id"]);
+        $client = $this->xwareClientFactory();
+        $client->resume($params["id"]);
     }
 
     public function queueMoveTorrent($params, $context)
@@ -1218,14 +1265,14 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
             }'
         );
 
-        $server = $this->xwareClientFactory();
+        $client = $this->xwareClientFactory();
 
         switch ($params["action"]) {
             case "top":
             case "up":
             case "down":
             case "bottom":
-                $server->queueMove($params["id"], $params["action"]);
+                $client->queueMove($params["id"], $params["action"]);
                 break;
             default:
                 throw new OMVException("Unknown Action: " . $params["action"]);

@@ -185,7 +185,7 @@ Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.XLSettings", {
            	   ]
             },  {
                 xtype: "grid",
-                id: "downloadfoldergrid",
+                id: "downloadfoldergrid2",
                 //title: 'Simpsons',
                 //store: Ext.data.StoreManager.lookup('simpsonsStore'),
                 columnLines: true,
@@ -197,7 +197,10 @@ Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.XLSettings", {
 						{ name: "uuid", type: "string" },
 						{ name: "simulatedfolder", type: "int" },
                         { name: "mntentref", type: "string"},
-						{ name: "actualfolder", type: "string" }
+						{ name: "actualfolder", type: "string" },
+						{ name: "description",type: "string"},
+						{ name: "available",type: "int"},
+						{ name: "percentage", type: "int"}
 					]
 				}),
 				    proxy: {
@@ -234,7 +237,7 @@ Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.XLSettings", {
                     width: 150, 
                     renderer: function(value, cellmeta, record, rowIndex, columnIndex, store)
                     {
-                        return "<span style='color:red;font-weight:bold;'>"+String.fromCharCode(Number(value)+66)+":\\TDDOWNLOAD\\</span>";
+                        return "<span style='color:red;font-weight:bold;'>"+String.fromCharCode(Number(value)+66)+":</span>";
                         //return value;
                     }
             		//dataIndex: "sharedfoldername",
@@ -246,15 +249,127 @@ Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.XLSettings", {
                     width: 250, 
                     renderer: function(value, cellmeta, record, rowIndex, columnIndex, store) {
                         var me=this;
-                        var a=me.ownerCt.ownerCt.ownerCt.store;
-                        var b=a.find("uuid",value);
-                        if (b>=0) {
+                        //var a=me.ownerCt.ownerCt.ownerCt.store;
+                        //var b=a.find("uuid",value);
+ //                       if (b>=0) {
                             //code
-                            return a.getAt(b).get("description");
-                        } else
-                        {
-                            return value;
-                        }
+                            return record.get("description");
+//                        } else
+//                        {
+ //                           return value;
+//                        }
+                       
+                    }
+                    
+                },{
+            		text: _("Actualfolder"),
+            		sortable: true,
+	            	dataIndex: "actualfolder",
+                    width: 250
+            		//stateId: "client"
+    	        }],
+                disableSelection: false,
+               }]
+             }, {
+                xtype: "fieldset",
+                title: _("Download folders"),
+                defaults: {
+                labelSeparator: ""
+            },
+            items: [{
+            	   xtype: "toolbar",
+            	   items:[{
+            	   	    xtype: "button",
+                        text: "增加",
+                        handler : this.onAddButton,
+                        scope: this
+            	   },{
+            	   	    xtype: "button",
+            	   	    text: "编辑",
+                        handler: this.onEditButton,
+                        scope: this
+            	   },{
+            	   	    xtype: "button",
+            	   	    text: "删除",
+                        handler: this.onDeleteButton,
+                        scope: this
+            	   }
+           	   ]
+            },  {
+                xtype: "grid",
+                id: "downloadfoldergrid",
+                //title: 'Simpsons',
+                //store: Ext.data.StoreManager.lookup('simpsonsStore'),
+                columnLines: true,
+                store: Ext.create("OMV.data.Store", {
+				autoLoad: true,
+				model: OMV.data.Model.createImplicit({
+					//idProperty: "uuid",
+					fields: [
+						{ name: "uuid", type: "string" },
+						{ name: "simulatedfolder", type: "int" },
+                        { name: "mntentref", type: "string"},
+						{ name: "actualfolder", type: "string" },
+						{ name: "description",type: "string"},
+						{ name: "available",type: "int"},
+						{ name: "percentage", type: "int"}
+					]
+				}),
+				    proxy: {
+					    type: "rpc",
+					    rpcData: {
+						    service: "XunLei",
+						    method: "getDownloadfolders"
+					    },
+					    appendSortParams: false
+				    },
+				    sorters: [{
+					    direction: "ASC",
+					    property: "simulatedfolder"
+			        }]
+     		  	}),
+                selModel: {
+                    injectCheckbox: 0,
+                    //type: "rowmodel",
+		            allowDeselect: true,
+		            mode: "MULTI",
+                    checkOnly: true     //只能通过checkbox选择
+                },
+                selType: "checkboxmodel",
+                width: "100%",
+                columns: [{
+                    text: _("uuid"),
+                    sortable: true,
+                    hidden: true,
+                    dataIndex: "uuid"
+                },{
+	          	    text: _("Simulated folder"),
+		            sortable: true,
+                    dataIndex: "simulatedfolder",
+                    width: 150, 
+                    renderer: function(value, cellmeta, record, rowIndex, columnIndex, store)
+                    {
+                        return "<span style='color:red;font-weight:bold;'>"+String.fromCharCode(Number(value)+66)+":</span>";
+                        //return value;
+                    }
+            		//dataIndex: "sharedfoldername",
+            		//stateId: "sharedfoldername"
+    	        },{
+                    text: _("mntentref"),
+                    sortable: true,
+                    dataIndex: "mntentref",
+                    width: 250, 
+                    renderer: function(value, cellmeta, record, rowIndex, columnIndex, store) {
+                        var me=this;
+                        //var a=me.ownerCt.ownerCt.ownerCt.store;
+                        //var b=a.find("uuid",value);
+ //                       if (b>=0) {
+                            //code
+                            return record.get("description");
+//                        } else
+//                        {
+ //                           return value;
+//                        }
                        
                     }
                     

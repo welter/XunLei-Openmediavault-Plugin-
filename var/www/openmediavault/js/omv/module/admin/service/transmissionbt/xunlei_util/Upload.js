@@ -45,6 +45,7 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei_util.Upload", {
 	layout: "fit",
 	modal: true,
 	buttonAlign: "center",
+	resizable:false,
 
 	constructor: function() {
 		var me = this;
@@ -81,19 +82,76 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei_util.Upload", {
 			Ext.create("Ext.tab.Panel",{
 				bodyPadding: "5 5 0",
 			   items:[{
-			       title:_("new common task"),
-			       items:[{
-			       	xtype:"filefield",
-			       	name: "file",
-			       	width: 500,
-					   fieldLabel: _("File"),
-					   allowBlank: false
+			   	    title:_("new normal file"),
+			   	    items:[
+			       me.tab1=Ext.create("Ext.form.Panel",{
+			       	border:false,
+			          items:[{
+			          	xtype:"textarea",
+			          	name: "file1",
+			          	labelAlign:"left",
+			          	labelWidth:50,
+			          	width: 500,
+			             height:100,
+					      fieldLabel: _("File"),
+//					      allowBlank: false
+			          },{
+			          	xtype:"fieldset",
+			          	layout: "column",
+			          	border: 0,
+			          	padding:"20px 0 0 0",
+			          	items:[{			          	
+			            xtype: "combo",
+			            labelAlign:"left",
+			            labelWidth:50,
+			            name: "path1",
+			            width:220,
+			            fieldLabel: _("filepath")},
+			            {
+			            xtype: "combo",
+			            name: "path2",
+			            width: 50
+			            },{
+			            xtype:"textfield",
+			            name:"path3",
+			            width:230,
+			            }]
+			          	},{
+			          	xtype:"fieldset",
+			          	layout:"hbox",
+			          	margin:"10px 0 0 0",
+			          	padding:"0 0 0 0",
+			          	border:0,
+			          	items:[{
+			            xtype:"label",
+//			            region:"west",
+//			            anchor:"0 0",
+			            margin:"5px 0 0 0",		            
+			            text:"所需空间"
+			            },{
+			            xtype:"panel",
+			            border:0,
+			            height:20,
+			            width:200
+			            },{
+			            xtype:"label",
+//			            region:"east",
+//			            anchor: "-1 0",
+			            margin:"5px 0 0 0",
+			            style:{
+			            	top: "5px"
+			            },
+			            text:"剩余空间"
+			            }]
+			          	},{
+			          	xtype:"progressbar"
+			          	}
+			          ]
 			       }
-			       ]
-			   },{
+			   )]},{
 			       title:_("open local torrent"),
 			       items:[
-			       Ext.create("Ext.form.Panel",{
+			       me.tab2=Ext.create("Ext.form.Panel",{
 			       	border:false,
 			          items:[{
 			          	xtype:"filefield",

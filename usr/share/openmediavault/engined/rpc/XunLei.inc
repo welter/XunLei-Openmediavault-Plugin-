@@ -47,7 +47,10 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
     {
         return sprintf("%s/downloadfolders", $this->getXPath());
     }
-
+    public function getCategorysXPath()
+    {
+        return sprintf("%s/ categorys", $this->getXPath());
+    }   
     public function getAvailableDriversXPath()
     {
         return sprintf("%s/availableDrivers", $this->getXPath());
@@ -99,6 +102,10 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
         $this->registerMethod("getJobList");
         $this->registerMethod("addTorrent");
         $this->registerMethod("getBoxSpace");
+        $this->registerMethod("getDownloadCategorys");
+         $this->registerMethod("getDownloadCategory");
+         $this->registerMethod("setDownloadCategory");
+         $this->registerMethod("deleteDownloadCategory");
         $this->registerMethod("uploadTorrent");
         $this->registerMethod("deleteTorrent");
         $this->registerMethod("pauseTorrent");
@@ -141,6 +148,7 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
         $object["maxuploadspeed"] = intval($object["maxuploadspeed"]);
         unset($object["downloadfolder"]);
         unset($object["availableDrivers"]);
+        unset($object['categorys']);
         return $object;
     }
 
@@ -275,6 +283,7 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
             "availableDrivers" => isset($oldObject["availableDrivers"]) ? $oldObject["availableDrivers"] : "1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16;17;18;19;20",
 //            "downloadfolder" => isset($params["downloadfolder"]) ? $params["downloadfolder"] : $oldObject["downloadfolder"],
             "downloadfolders" => isset($oldObject["downloadfolders"]) ? $oldObject["downloadfolders"] : array(),
+        	"categorys"=> isset($oldObject["categorys"]) ? $oldObject["categorys"] : array(),
         );
 
         // Set configuration object
@@ -313,7 +322,7 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
             $o=array("uuid"=>$objectv['uuid'],
                      "mntentref"=>$objectv['mntentref'],
                      "actualfolder"=>$objectv['actualfolder'],
-                     "simulatedfolder"=>intval($objectv['simulatedfolder']));
+                     "categoryref"=>$objectv['categoryref']);
             $xpath = sprintf("//system/fstab/mntent[uuid='%s']",
             		$objectv['mntentref']);
             // $xpath = "//system/fstab/mntent[not(contains(opts,'bind'))]";
@@ -348,7 +357,11 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
                     	$o['available']=$fsStats['available'];
                     	$o['percentage']=$fsStats['percentage'];
                     	}
-            $result[]=$o;
+                     $xpath = sprintf($this->getCategorysXPath()."/category"."[uuid='%s']",
+    			            $objectv ['categoryref']);
+    	             $objects = $xmlConfig->get($xpath);
+                     $o['categoryname']=$objects['name'];
+                     $result[]=$o;
         }
         if (is_null($result)) {
             throw new OMVException(
@@ -385,10 +398,7 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
                         "uuid": {'.$GLOBALS['OMV_JSONSCHEMA_UUID_UNDEFINED'].'},
                         "mntentref": {'.$GLOBALS['OMV_JSONSCHEMA_UUID'].'},
                         "actualfolder": {"type": "string"},
-                        "simulatedfolder": {
-                            "type": "integer",
-                            "minimum": 1,
-                            "maximum": 20}
+                        "categoryref": {'.$GLOBALS['OMV_JSONSCHEMA_UUID'].'}
                     }
             }'
         );
@@ -399,9 +409,8 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
 			  OMVUtil::uuid() : $params['uuid'],
 			"mntentref" => $params['mntentref'],
 			"actualfolder" => $params['actualfolder'],
-			"simulatedfolder" => intval($params['simulatedfolder']),
+			"categoryref" => $params['categoryref'],
 		);
-
         // Set configuration object
 		$success = FALSE;
 		if($params['uuid'] == $GLOBALS['OMV_UUID_UNDEFINED']) {
@@ -414,10 +423,10 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
 				  $xpath);
 			}
             // Check if the simulatedfolder is available and to remove it.
-            if (!$this->findAndRemoveAvailableDriver($object['simulatedfolder']))
-            {
-                throw new OMVException(OMVErrorMsg::E_CONFIG_SET_OBJECT_FAILED);
-            }
+//            if (!$this->findAndRemoveAvailableDriver($object['simulatedfolder']))
+//           {
+//                throw new OMVException(OMVErrorMsg::E_CONFIG_SET_OBJECT_FAILED);
+//            }
 			// Check if the required mount point already exists or if it is
 			// necessary to create it.
 			//$dir = sprintf("%s/%s", $GLOBALS['OMV_NFSD_EXPORT_DIR'],
@@ -452,24 +461,23 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
 		}
         else {
 			// Update the existing configuration object.
-            $xpath = sprintf("//services/xunlei/downloadfolders/downloadfolder[uuid='%s']", $params['uuid']);
-            $meObject = $xmlConfig->get($xpath);
-            if (is_null($meObject)){
-                throw new OMVException(OMVErrorMsg::E_CONFIG_SET_OBJECT_FAILED);
-            }
-            $xpath = sprintf("//services/xunlei/downloadfolders/downloadfolder[simulatedfolder='%s']", $meObject['simulatedfolder']);
+        $success = $xmlConfig->replace("//services/xunlei/downloadfolders/downloadfolder[" .
+			  "uuid='{$params['uuid']}']", $object);
+            
+            /* remove simulatefolder portery
+            $xpath = sprintf("//services/xunlei/downloadfolders/downloadfolder[categoryref='%s']", $meObject['categoryref']);
             $meobject=$xmlConfig->get($xpath);
-            $oldSimulatedfolder=$meObject['simulatedfolder'];
-            $xpath = sprintf("//services/xunlei/downloadfolders/downloadfolder[simulatedfolder='%s']", $params['simulatedfolder']);
+            $oldCategoryref=$meObject['categoryref'];
+            $xpath = sprintf("//services/xunlei/downloadfolders/downloadfolder[categoryref='%s']", $params['categoryref']);
             $meObject2 = $xmlConfig->get($xpath);
             if (is_null($meObject2)){
-                $this->addAvailableDriver(intval($oldSimulatedfolder));
-                $this->findAndRemoveAvailableDriver(intval($params['simulatedfolder']));
+                $this->addAvailableDriver(intval($oldCategoryref));
+                $this->findAndRemoveAvailableDriver(intval($params['categoryref']));
 			    $success = $xmlConfig->replace("//services/xunlei/downloadfolders/downloadfolder[" .
 			  "uuid='{$params['uuid']}']", $object);}
             else {
                 throw new OMVException(OMVErrorMsg::E_CONFIG_SET_OBJECT_FAILED);
-            }
+            }*/
 		}
 		if(FALSE === $success) {
 			throw new OMVException(OMVErrorMsg::E_CONFIG_SET_OBJECT_FAILED);
@@ -508,7 +516,7 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
 		$xpath = sprintf($this->getDownloadfoldersXPath()."/downloadfolder"."[uuid='%s']",
 		  $params['uuid']);
 		$object = $xmlConfig->get($xpath);
-        $object['simulatedfolder']=intval($object['simulatedfolder']);
+//        $object['categoryref']=intval($object['categoryref']);
 		if(is_null($object)) {
 			throw new OMVException(OMVErrorMsg::E_CONFIG_GET_OBJECT_FAILED,
 			  $xpath);
@@ -558,11 +566,11 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
           $object = $this->deleteConfigObjectByPath($xpath,
 		  "org.openmediavault.services.xunlei");
           
-          if (!$this->addAvailableDriver(intval($object['simulatedfolder'])))
-            {
-                $xmlConfig->set($xpath,$object);
-                throw new OMVException(OMVErrorMsg::E_CONFIG_SET_OBJECT_FAILED);
-            }
+//          if (!$this->addAvailableDriver(intval($object['simulatedfolder'])))
+//            {
+//                $xmlConfig->set($xpath,$object);
+//                throw new OMVException(OMVErrorMsg::E_CONFIG_SET_OBJECT_FAILED);
+ //           }
 //        return $xpath;
         // Check if the download folder is still shared by another downloadfolder.
 		// In this case do not delete or unmount the mount point configuration
@@ -578,7 +586,7 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
           $objects[]=$object;
         }
 		// Return the deleted configuration object.
-		return $object;
+		return $objects;
     }
 
     /**
@@ -1125,6 +1133,156 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
 	$client = $this->xwareClientFactory();
 	return $client->getBoxSpace();	
 }
+    public function getDownloadCategorys($params,$context)
+{
+	global $xmlConfig;
+	// Validate the RPC caller context.
+	$this->validateMethodContext($context, array(
+			"role" => OMV_ROLE_ADMINISTRATOR
+	));
+	
+	// Get configuration object
+	$object = $xmlConfig->getList($this->getCategorysXPath().'/category');
+	// Modify result data
+	$result=array();
+	foreach($object as $objectv)
+	{
+		$o=array("uuid"=>$objectv['uuid'],
+				"name"=>$objectv['name'],
+				"description"=>$objectv['description']
+		);
+		$result[]=$o;
+		}
+		if (is_null($result)) {
+			throw new OMVException(
+					OMVErrorMsg::E_CONFIG_GET_OBJECT_FAILED,
+					$this->getDownloadfoldersXPath()
+			);
+		}
+		
+		return $result;
+}
+    public function setDownloadCategory($params,$context)
+    {
+    	global $xmlConfig;
+    	
+    	// Validate the RPC caller context.
+    	$this->validateMethodContext($context, array(
+    			"role" => OMV_ROLE_ADMINISTRATOR
+    	));
+    	
+    	// Validate the parameters of the RPC service method.
+    	$this->validateMethodParams(
+    			$params,
+    			'{
+                "type": "object",
+                    "properties": {
+                        "uuid": {'.$GLOBALS['OMV_JSONSCHEMA_UUID_UNDEFINED'].'},
+                        "name": {"type": "string"},
+                        "description": {"type": "string"}
+                    }
+            }'
+    	);
+    	
+    	// Prepare configuration data
+    	$object = array(
+    			"uuid" => ($params['uuid'] == $GLOBALS['OMV_UUID_UNDEFINED']) ?
+    			OMVUtil::uuid() : $params['uuid'],
+    			"name" => $params['name'],
+    			"actualfolder" => $params['actualfolder'],
+    			"description" => $params['description'],
+    	);
+    	
+    	// Set configuration object
+    	$success = FALSE;
+    	if($params['uuid'] == $GLOBALS['OMV_UUID_UNDEFINED']) {
+  					// Append the download category object.
+    					$success = $xmlConfig->set($this->getCategorysXPath(),
+    							array("category" => $object));
+    	}
+    	else {
+    	// Update the existing configuration object.
+    		$xpath = sprintf($this->getCategorysXPath()."/category[uuid='%s']", $params['uuid']);
+    		$meObject = $xmlConfig->get($xpath);
+    		if (is_null($meObject)){
+    		throw new OMVException(OMVErrorMsg::E_CONFIG_SET_OBJECT_FAILED);
+    		}
+    		}
+    		if(FALSE === $success) {
+    		throw new OMVException(OMVErrorMsg::E_CONFIG_SET_OBJECT_FAILED);
+    		}
+    	
+    		// Notify configuration changes
+    		$dispatcher = &OMVNotifyDispatcher::getInstance();
+    		$dispatcher->notify(OMV_NOTIFY_MODIFY, $this->getEventMessagePath(), $object);
+    	
+    		return $object;
+    }
+    public function getDownloadCategory($params,$context)
+    {
+    	global $xmlConfig;
+    	
+    	// Validate the RPC caller context.
+    	$this->validateMethodContext($context, array(
+    			"role" => OMV_ROLE_ADMINISTRATOR
+    	));
+    	// Validate the parameters of the RPC service method.
+    	$this->validateMethodParams($params, '{
+			  "type":"object",
+			  "properties":{
+				  "uuid":{'.$GLOBALS['OMV_JSONSCHEMA_UUID'].'}
+			  }
+		  }');
+    	// Get the configuration object.
+    	$xpath = sprintf($this->getCategorysXPath()."/category"."[uuid='%s']",
+    			$params['uuid']);
+    	$object = $xmlConfig->get($xpath);
+    	//        $object['categoryref']=intval($object['categoryref']);
+    	if(is_null($object)) {
+    		throw new OMVException(OMVErrorMsg::E_CONFIG_GET_OBJECT_FAILED,
+    				$xpath);
+    	}
+    	return $object;
+    }
+    public function deleteDownloadCategory($params,$context)
+    {
+    	global $xmlConfig;
+    	
+    	// Validate the RPC caller context.
+    	$this->validateMethodContext($context, array(
+    			"role" => OMV_ROLE_ADMINISTRATOR
+    	));
+    	// Validate the parameters of the RPC service method.
+    	
+    	$this->validateMethodParams($params, '{
+              "type": "object",
+              "properties": {
+                "uuids": {
+			       "type": "array",
+                   "items": {
+                   "type":"object",
+			       "properties":{
+				      "uuid":{'.$GLOBALS['OMV_JSONSCHEMA_UUID'].'}
+			       }
+                }
+              }
+            }
+		  }');
+    	// Delete the configuration object.
+    	//        return $params['uuids'][0]['uuid'];
+    	$uuids=$params['uuids'];
+    	$objects=array();
+    	foreach($uuids as $uuid) {
+    		$xpath = sprintf($this->getCategorysXPath()."/category"."[uuid='%s']",
+    				$uuid['uuid']);
+    		$object = $this->deleteConfigObjectByPath($xpath,
+    				"org.openmediavault.services.xunlei");
+			$objects[]=$object;
+    			}
+    			// Return the deleted configuration object.
+    			return $objects;    	
+    }
+    
     public function uploadTorrent($params, $context)
     {
         // Validate the RPC caller context.

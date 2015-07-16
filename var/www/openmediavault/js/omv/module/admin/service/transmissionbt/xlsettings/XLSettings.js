@@ -46,7 +46,7 @@ Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.XLSettings", {
 					idProperty: "uuid",
 					fields: [
 						{ name: "uuid", type: "string" },
-						{ name: "devicefile", type: "string" },
+						{ name: "name", type: "string" },
 						{ name: "description", type: "string" }
 					]
 				}),
@@ -183,9 +183,7 @@ Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.XLSettings", {
                         scope: this
             	   }
            	   ]
-            },  {
-                xtype: "grid",
-                id: "downloadfoldergrid2",
+            },  this.downloadfoldergrid=Ext.create("Ext.grid.Panel",{
                 //title: 'Simpsons',
                 //store: Ext.data.StoreManager.lookup('simpsonsStore'),
                 columnLines: true,
@@ -195,12 +193,13 @@ Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.XLSettings", {
 					//idProperty: "uuid",
 					fields: [
 						{ name: "uuid", type: "string" },
-						{ name: "simulatedfolder", type: "int" },
+						{ name: "categoryref", type: "string" },
                         { name: "mntentref", type: "string"},
 						{ name: "actualfolder", type: "string" },
 						{ name: "description",type: "string"},
 						{ name: "available",type: "int"},
-						{ name: "percentage", type: "int"}
+						{ name: "percentage", type: "int"},
+						{ name:"categoryname",type :"string"}
 					]
 				}),
 				    proxy: {
@@ -213,7 +212,7 @@ Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.XLSettings", {
 				    },
 				    sorters: [{
 					    direction: "ASC",
-					    property: "simulatedfolder"
+					    property: "categoryname"
 			        }]
      		  	}),
                 selModel: {
@@ -231,13 +230,13 @@ Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.XLSettings", {
                     hidden: true,
                     dataIndex: "uuid"
                 },{
-	          	    text: _("Simulated folder"),
+	          	    text: _("Download category"),
 		            sortable: true,
-                    dataIndex: "simulatedfolder",
+                    dataIndex: "categoryname",
                     width: 150, 
                     renderer: function(value, cellmeta, record, rowIndex, columnIndex, store)
                     {
-                        return "<span style='color:red;font-weight:bold;'>"+String.fromCharCode(Number(value)+66)+":</span>";
+                        return "<span style='color:red;font-weight:bold;'>"+value+"</span>";
                         //return value;
                     }
             		//dataIndex: "sharedfoldername",
@@ -269,10 +268,10 @@ Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.XLSettings", {
             		//stateId: "client"
     	        }],
                 disableSelection: false,
-               }]
+               })]
              }, {
                 xtype: "fieldset",
-                title: _("Download folders"),
+                title: _("Download categorys"),
                 defaults: {
                 labelSeparator: ""
             },
@@ -281,23 +280,21 @@ Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.XLSettings", {
             	   items:[{
             	   	    xtype: "button",
                         text: "增加",
-                        handler : this.onAddButton,
+                        handler : this.onCategoryAddButton,
                         scope: this
             	   },{
             	   	    xtype: "button",
             	   	    text: "编辑",
-                        handler: this.onEditButton,
+                        handler: this.onCategoryEditButton,
                         scope: this
             	   },{
             	   	    xtype: "button",
             	   	    text: "删除",
-                        handler: this.onDeleteButton,
+                        handler: this.onCategoryDeleteButton,
                         scope: this
             	   }
            	   ]
-            },  {
-                xtype: "grid",
-                id: "downloadfoldergrid",
+            },  this.downloadcategorygrid=Ext.create("Ext.grid.Panel",{
                 //title: 'Simpsons',
                 //store: Ext.data.StoreManager.lookup('simpsonsStore'),
                 columnLines: true,
@@ -307,25 +304,21 @@ Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.XLSettings", {
 					//idProperty: "uuid",
 					fields: [
 						{ name: "uuid", type: "string" },
-						{ name: "simulatedfolder", type: "int" },
-                        { name: "mntentref", type: "string"},
-						{ name: "actualfolder", type: "string" },
-						{ name: "description",type: "string"},
-						{ name: "available",type: "int"},
-						{ name: "percentage", type: "int"}
+						{ name: "name", type: "string" },
+                        { name: "description", type: "string"},
 					]
 				}),
 				    proxy: {
 					    type: "rpc",
 					    rpcData: {
 						    service: "XunLei",
-						    method: "getDownloadfolders"
+						    method: "getDownloadCategorys"
 					    },
 					    appendSortParams: false
 				    },
 				    sorters: [{
 					    direction: "ASC",
-					    property: "simulatedfolder"
+					    property: "name"
 			        }]
      		  	}),
                 selModel: {
@@ -343,45 +336,18 @@ Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.XLSettings", {
                     hidden: true,
                     dataIndex: "uuid"
                 },{
-	          	    text: _("Simulated folder"),
+	          	    text: _("name"),
 		            sortable: true,
-                    dataIndex: "simulatedfolder",
-                    width: 150, 
-                    renderer: function(value, cellmeta, record, rowIndex, columnIndex, store)
-                    {
-                        return "<span style='color:red;font-weight:bold;'>"+String.fromCharCode(Number(value)+66)+":</span>";
-                        //return value;
-                    }
-            		//dataIndex: "sharedfoldername",
-            		//stateId: "sharedfoldername"
+                    dataIndex: "name",
+                    width: 150
     	        },{
-                    text: _("mntentref"),
+                    text: _("description"),
                     sortable: true,
-                    dataIndex: "mntentref",
-                    width: 250, 
-                    renderer: function(value, cellmeta, record, rowIndex, columnIndex, store) {
-                        var me=this;
-                        //var a=me.ownerCt.ownerCt.ownerCt.store;
-                        //var b=a.find("uuid",value);
- //                       if (b>=0) {
-                            //code
-                            return record.get("description");
-//                        } else
-//                        {
- //                           return value;
-//                        }
-                       
-                    }
-                    
-                },{
-            		text: _("Actualfolder"),
-            		sortable: true,
-	            	dataIndex: "actualfolder",
-                    width: 250
-            		//stateId: "client"
-    	        }],
+                    dataIndex: "description",
+                    width: 250                    
+                }],
                 disableSelection: false,
-               }]
+               })]
              }]
         }];
     },
@@ -390,13 +356,13 @@ Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.XLSettings", {
 		Ext.create("OMV.module.admin.service.transmissionbt.xlsettings.Downloadfolder", {
 			title: _("Add download folder"),
 			uuid: OMV.UUID_UNDEFINED,
-            currentDriver: -1,
-            simulatedfolder:"3e9d4ef9-0d93-4a8b-8ad3-034dd44319f9",
+            currentCategory: -1,
+//            categoryref:"3e9d4ef9-0d93-4a8b-8ad3-034dd44319f9",
 			listeners: {
 				scope: me,
 				submit: function() {
 //					me.doReload();
-                    Ext.getCmp("downloadfoldergrid").getStore().reload();
+                    me.downloadfoldergrid.getStore().reload();
 				},
 				exception: function(c) {
 					// Reload the grid content in case of a failure, too.
@@ -407,16 +373,16 @@ Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.XLSettings", {
     },
     onEditButton: function() {
 		var me = this;
-		var selModel = Ext.getCmp("downloadfoldergrid").getSelectionModel();
+		var selModel = me.downloadfoldergrid.getSelectionModel();
 		var record = selModel.getSelection()[0];
 		var w=Ext.create("OMV.module.admin.service.transmissionbt.xlsettings.Downloadfolder", {
 			  title: _("Edit download folder"),
 			  uuid: record.get("uuid"),
-              currentDriver: record.get("simulatedfolder"),
+              currentCategory: record.get("categoryref"),
 			  listeners: {
 				  scope: me,
 				  submit: function() {
-					  Ext.getCmp("downloadfoldergrid").getStore().reload();
+					  me.downloadfoldergrid.getStore().reload();
 				  }
 			  }
 		  });
@@ -426,7 +392,7 @@ Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.XLSettings", {
     onDeleteButton: function() {
 //        var me=this.ownerCt.ownerCt;
         var me=this;
-        var selModel = Ext.getCmp("downloadfoldergrid").getSelectionModel();
+        var selModel = me.downloadfoldergrid.getSelectionModel();
         var records=selModel.getSelection();
         var uuids=new Array();
  //       record.length;
@@ -438,7 +404,7 @@ Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.XLSettings", {
 		OMV.Rpc.request({
 			scope: me,
 			callback: function () {
-                Ext.getCmp("downloadfoldergrid").getStore().reload();
+                me.downloadfoldergrid.getStore().reload();
                 },
 			rpcData: {
 				service: "XunLei",
@@ -450,9 +416,68 @@ Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.XLSettings", {
 			}
 		});
     },
+    onCategoryAddButton:function(){
+ 		var me = this;
+		Ext.create("OMV.module.admin.service.transmissionbt.xlsettings.DownloadCategory", {
+			title: _("Add download category"),
+			uuid: OMV.UUID_UNDEFINED,
+			listeners: {
+				scope: me,
+				submit: function() {
+                    me.downloadcategorygrid.getStore().reload();
+				},
+				exception: function(c) {
+					me.doReload();
+				}
+			}
+		}).show();      
+    	},
+    onCategoryEditButton:function(){
+		var me = this;
+		var selModel = me.downloadcategorygrid.getSelectionModel();
+		var record = selModel.getSelection()[0];
+		var w=Ext.create("OMV.module.admin.service.transmissionbt.xlsettings.DownloadCategory", {
+			  title: _("Edit download category"),
+			  uuid: record.get("uuid"),
+			  listeners: {
+				  scope: me,
+				  submit: function() {
+					  me.downloadcategorygrid.getStore().reload();
+				  }
+			  }
+		  });
+        var b=w.getDockedItems("combo");
+        w.show();
+    },
+    onCategoryDeleteButton:function(){
+        var me=this;
+        var selModel = me.downloadcategorygrid.getSelectionModel();
+        var records=selModel.getSelection();
+        var uuids=new Array();
+ //       record.length;
+        for (var i=0;i<records.length;i++) {
+            //code
+            uuids[i] ={"uuid":records[i].get("uuid")};
+        }
+        var param={"uuids":uuids};
+		OMV.Rpc.request({
+			scope: me,
+			callback: function () {
+                me.downloadcategorygrid.getStore().reload();
+                },
+			rpcData: {
+				service: "XunLei",
+				method: "deleteDownloadCategory",
+				params: {
+//					uuid: record.get("uuid")
+                    uuids
+				}
+			}
+		});
+    },
     beforesubmit: function(obj,options) {
         var c=options.rpcData.params;
-        var g=Ext.getCmp("downloadfoldergrid");
+        var g=me.downloadfoldergrid;
         var s=g.getStore();
         var d=new Array();
         for(var i =0;i<s.getCount();i++){
@@ -462,7 +487,7 @@ Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.XLSettings", {
                  d[i] ={"uuid":record.get("uuid"),
                  "mntentref":record.get("mntentref"),
                  "actualfolder":record.get("actualfolder"),
-                 "simulatedfolder":record.get("simulatedfolder")
+                 "categoryref":record.get("categoryref")
                  };
         }
         //var d2=JSON.stringify(d);
@@ -519,15 +544,15 @@ Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.Downloadfolder", 
 		var me = this;
 		return [{
 			xtype: "combo",
-			name: "simulatedfolder",
-			fieldLabel: _("Simulated folder"),
-            emptyText: _("Select a drivers"),
-            allowNone: false,
-			allowBlank: false,
+			name: "categoryref",
+			fieldLabel: _("Download category"),
+            emptyText: _("Select a category"),
+            allowNone: true,
+			allowBlank: true,
             editable: false,
             triggerAction: "all",
-            displayField: "driverPath",
-            valueField: "availableDriver",
+            displayField: "name",
+            valueField: "uuid",
 //            listeners: {
 //                show : function() {
                   //this.setValue(this.getValue);
@@ -536,10 +561,11 @@ Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.Downloadfolder", 
             store: Ext.create("OMV.data.Store", {
                 autoLoad: true,
                 model: OMV.data.Model.createImplicit({
-                    idProperty: "availableDriver",
+                    idProperty: "uuid",
                     fields: [
-                        { name: "availableDriver" , type: "int"},
-                        { name: "driverPath", type: "string"},
+                        { name: "uuid" , type: "string"},
+                        { name: "name", type: "string"},
+                        { name: "description", type: "string"}
                     ]
                 }),
           /*      listeners: {
@@ -556,14 +582,14 @@ Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.Downloadfolder", 
                     type: "rpc",
                     rpcData: {
                         service: "XunLei",
-                        method: "getAvailableDrivers",
+                        method: "getDownloadCategorys",
                         params: me.currentDriver
                     },
                     appendSortParams: false
                 },
                 sorters: [{
                     direction: "ASC",
-                    property: "availableDriver"
+                    property: "name"
                 }]
             })
 //			readOnly: true,
@@ -650,7 +676,7 @@ Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.Downloadfolder", 
 			// folder will be relocated which requires a confirmation from
 			// the user.
 			var isDirty = false;
-			Ext.Array.each([ "simulatedfolder", "mntentref", "actualfolder" ], function(name) {
+			Ext.Array.each([ "categoryref", "mntentref", "actualfolder" ], function(name) {
 				var field = me.findField(name);
 				if (Ext.isObject(field) && field.isFormField && field.isDirty())
 					isDirty = true;
@@ -659,6 +685,95 @@ Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.Downloadfolder", 
 				OMV.MessageBox.show({
 					title: _("Confirmation"),
 					msg: _("Do you really want to relocate the shared folder? The content of the shared folder will not be moved automatically, you have to do this yourself."),
+					icon: Ext.Msg.QUESTION,
+					buttons: Ext.Msg.YESNO,
+					fn: function(answer) {
+						if (answer == "yes") // Continue ...
+							me.superclass.doSubmit.apply(this, arguments);
+						else // Close the window and exit.
+							this.close();
+					},
+					scope: me,
+					icon: Ext.Msg.QUESTION
+				});
+			} else {
+				me.callParent(arguments);
+			}
+		}
+	}
+});
+Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.DownloadCategory", {
+	extend: "OMV.workspace.window.Form",
+	requires: [
+		"OMV.workspace.window.plugin.ConfigObject"
+	],
+	uses: [
+		"OMV.data.Model",
+		"OMV.data.Store",
+		"OMV.window.FolderBrowser"
+	],
+
+	rpcService: "XunLei",
+	rpcGetMethod: "getDownloadCategory",
+	rpcSetMethod: "setDownloadCategory",
+	plugins: [{
+		ptype: "configobject"
+	}],
+	width: 500,
+
+	/**
+	 * The class constructor.
+	 * @fn constructor
+	 * @param uuid The UUID of the database/configuration object. Required.
+	 */
+
+	getFormConfig: function() {
+		return {
+			layout: {
+				type: "vbox",
+				align: "stretch"
+			}
+		};
+	},
+
+	getFormItems: function() {
+		var me = this;
+		return [{
+			xtype: "textfield",
+			name: "name",
+			fieldLabel: _("Name"),
+			emptyText: _("Input name"),
+			allowBlank: false,
+			allowNone: false,
+			editable: true
+		},{
+			xtype: "textarea",
+			name: "description",
+			fieldLabel: _("Description"),
+			allowBlank: true
+		}];
+	},
+
+	doSubmit: function() {
+		var me = this;
+		if (OMV.UUID_UNDEFINED == me.uuid) {
+			// Call the parent method if the shared folder is added.
+			me.callParent(arguments);
+		} else {
+			// If the shared folder already exists then check if the volume
+			// or relative path has been changed. In this case the shared
+			// folder will be relocated which requires a confirmation from
+			// the user.
+			var isDirty = false;
+			Ext.Array.each([ "name", "description" ], function(name) {
+				var field = me.findField(name);
+				if (Ext.isObject(field) && field.isFormField && field.isDirty())
+					isDirty = true;
+			}, me);
+			if (true === isDirty) {
+				OMV.MessageBox.show({
+					title: _("Confirmation"),
+					msg: _("is delete."),
 					icon: Ext.Msg.QUESTION,
 					buttons: Ext.Msg.YESNO,
 					fn: function(answer) {

@@ -1,0 +1,33 @@
+<?php
+
+/**
+ * Copyright (C) 2014-2015 OpenMediaVault Plugin Developers
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+interface IXwareClient
+{
+    public static function getDefaultServerAddress();
+    public function connect($url, $username, $password);
+    public function getJobs();
+    public function add($location, $paused = false);
+    public function getBoxSpace();
+    public function delete($torrent, $deleteLocalData);
+    public function pause($torrent);
+    public function resume($torrent);
+    public function queueMove($torrent, $action);
+    public function openVipChannel($jobId);
+    public function openLixianChannel($jobId);
+}

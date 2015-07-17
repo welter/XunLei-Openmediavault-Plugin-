@@ -173,6 +173,7 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei_util.Upload", {
                         store: me.dfstore=Ext.create("OMV.data.Store", {
                		    autoLoad: true,
                         model: OMV.data.Model.createImplicit({
+                        	idProperty: "uuid",
 					        fields: [
 						       { name: "uuid", type: "string" },
 						       { name: "name",type: "string" },

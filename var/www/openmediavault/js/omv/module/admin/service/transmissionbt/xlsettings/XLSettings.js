@@ -193,6 +193,7 @@ Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.XLSettings", {
 					//idProperty: "uuid",
 					fields: [
 						{ name: "uuid", type: "string" },
+						{ name: "name",type: "string"},
 						{ name: "categoryref", type: "string" },
                         { name: "mntentref", type: "string"},
 						{ name: "actualfolder", type: "string" },
@@ -229,6 +230,9 @@ Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.XLSettings", {
                     sortable: true,
                     hidden: true,
                     dataIndex: "uuid"
+                },{
+                	text:_("Name"),
+                	dataIndex:  "name"
                 },{
 	          	    text: _("Download category"),
 		            sortable: true,
@@ -543,6 +547,13 @@ Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.Downloadfolder", 
 	getFormItems: function() {
 		var me = this;
 		return [{
+			xtype: "textfield",
+			fieldLabel:_("name"),
+			emptyText:_("Input download folder name"),
+			name: "name",
+			allowNone:false,
+			allowBlank:false
+		},{
 			xtype: "combo",
 			name: "categoryref",
 			fieldLabel: _("Download category"),
@@ -553,6 +564,11 @@ Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.Downloadfolder", 
             triggerAction: "all",
             displayField: "name",
             valueField: "uuid",
+            tpl:'<tpl for=".">' +  
+            '<div class="x-boundlist-item" style="height:20px;">' +  
+            '{name}&nbsp' +  
+           '</div>'+  
+           '</tpl>',
 //            listeners: {
 //                show : function() {
                   //this.setValue(this.getValue);
@@ -583,7 +599,6 @@ Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.Downloadfolder", 
                     rpcData: {
                         service: "XunLei",
                         method: "getDownloadCategorys",
-                        params: me.currentDriver
                     },
                     appendSortParams: false
                 },

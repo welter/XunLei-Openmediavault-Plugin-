@@ -41,7 +41,7 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei_util.Upload", {
 	title: _("Upload file"),
 	waitMsg: _("Uploading file ..."),
 	width: 550,
-	height: 300,
+	height: 330,
 	layout: "fit",
 	modal: true,
 	buttonAlign: "center",
@@ -93,6 +93,7 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei_util.Upload", {
 			          	labelWidth:50,
 			          	width: 500,
 			             height:100,
+			             labelStyle: "vertical-align : middle",
 					      fieldLabel: _("File"),
 //					      allowBlank: false
 			          },{
@@ -100,22 +101,121 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei_util.Upload", {
 			          	layout: "column",
 			          	border: 0,
 			          	padding:"20px 0 0 0",
+			          	margin: "0 0 0 0",
 			          	items:[{			          	
 			            xtype: "combo",
 			            labelAlign:"left",
 			            labelWidth:50,
-			            name: "path1",
-			            width:220,
-			            fieldLabel: _("filepath")},
-			            {
-			            xtype: "combo",
-			            name: "path2",
-			            width: 50
-			            },{
+			            name: "category",
+			            width:180,
+			            fieldLabel: _("filepath"),
+			                        emptyText: _("Select a category"),
+                        allowNone: true,
+			            allowBlank: true,
+                        editable: false,
+                        triggerAction: "all",
+                        displayField: "name",
+                        valueField: "uuid",
+                        tpl:'<tpl for=".">' +  
+                               '<div class="x-boundlist-item" style="height:20px;">' +  
+                               '{name}&nbsp' +  
+                               '</div>'+  
+                               '</tpl>',
+                        store: Ext.create("OMV.data.Store", {
+               		    autoLoad: true,
+                        model: OMV.data.Model.createImplicit({
+                              fields: [
+                                    { name: "uuid" , type: "string"},
+                                    { name: "name", type: "string"},
+                                    { name: "description", type: "string"}
+                             ]
+                        }),
+                           proxy: {
+                               type: "rpc",
+                               rpcData: {
+                                   service: "XunLei",
+                                   method: "getDownloadCategorys"
+                           },
+                              appendSortParams: false
+                          },
+                          sorters: [{
+                          direction: "ASC",
+                          property: "name"
+                          }]
+            }),
+                        listeners: {
+                        	change: function( object, newValue, oldValue, eOpts ){
+                        		var a=me.dfstore;
+                        		a.clearFilter();
+                        		if (newValue!=""){
+                        		a.filterBy(function(record){
+                        		    return (record.get('categoryref')==newValue);
+                        		});
+                        		}
+                        	}
+                        }
+            }, me.dfcombo=Ext.create("Ext.form.field.ComboBox",
+                       {xtype: "combo",
+			            name: "downloadfolder",
+			            width: 190,
+			            emptyText: _("Select a downloadfolder"),
+                        allowNone: false,
+			            allowBlank: false,
+                        editable: false,
+                        triggerAction: "all",
+                        displayField: "name",
+                        valueField: "uuid",
+                        tpl:'<tpl for=".">' +  
+                               '<div class="x-boundlist-item" style="height:20px;">' +  
+                               '{name}&nbsp' +  
+                               '</div>'+  
+                               '</tpl>',
+                        store: me.dfstore=Ext.create("OMV.data.Store", {
+               		    autoLoad: true,
+                        model: OMV.data.Model.createImplicit({
+					        fields: [
+						       { name: "uuid", type: "string" },
+						       { name: "name",type: "string" },
+					       	   { name: "categoryref", type: "string" },
+                               { name: "mntentref", type: "string"},
+						       { name: "actualfolder", type: "string" },
+						       { name: "description",type: "string"},
+						       { name: "available",type: "int"},
+						       { name: "percentage", type: "int"},
+						       { name:"categoryname",type :"string"}
+					]
+				}),
+				    proxy: {
+					    type: "rpc",
+					    rpcData: {
+						    service: "XunLei",
+						    method: "getDownloadfolders"
+					    },
+					    appendSortParams: false
+				    },
+				    sorters: [{
+					    direction: "ASC",
+					    property: "categoryname"
+			        }]
+     		  	})
+			            }),{
 			            xtype:"textfield",
 			            name:"path3",
-			            width:230,
+			            width:130,
 			            }]
+			          	},{
+			          		xtype:"label",
+			          		text:"test/teset/tet",
+			          		margin:"0 0 0 0",
+			          		padding:"0 0 0 0",
+			          		border:0,
+			          		style:{
+			          			color: "blue",
+			          			"font-style":"italic",
+			          			"font-size":"x-small",
+			          			left:"55px"
+			          		},
+			          		editable:false
 			          	},{
 			          	xtype:"fieldset",
 			          	layout:"hbox",

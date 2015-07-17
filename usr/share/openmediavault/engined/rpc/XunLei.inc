@@ -320,6 +320,7 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
         foreach($object as $objectv)
         {
             $o=array("uuid"=>$objectv['uuid'],
+            		"name"=>$objectv['name'],
                      "mntentref"=>$objectv['mntentref'],
                      "actualfolder"=>$objectv['actualfolder'],
                      "categoryref"=>$objectv['categoryref']);
@@ -396,6 +397,7 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
                 "type": "object",
                     "properties": {
                         "uuid": {'.$GLOBALS['OMV_JSONSCHEMA_UUID_UNDEFINED'].'},
+        		        "name":{"type":"string"},
                         "mntentref": {'.$GLOBALS['OMV_JSONSCHEMA_UUID'].'},
                         "actualfolder": {"type": "string"},
                         "categoryref": {'.$GLOBALS['OMV_JSONSCHEMA_UUID'].'}
@@ -407,6 +409,7 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
 		$object = array(
 			"uuid" => ($params['uuid'] == $GLOBALS['OMV_UUID_UNDEFINED']) ?
 			  OMVUtil::uuid() : $params['uuid'],
+			"name"=> $params['name'],
 			"mntentref" => $params['mntentref'],
 			"actualfolder" => $params['actualfolder'],
 			"categoryref" => $params['categoryref'],
@@ -1153,13 +1156,10 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
 		);
 		$result[]=$o;
 		}
-		if (is_null($result)) {
-			throw new OMVException(
-					OMVErrorMsg::E_CONFIG_GET_OBJECT_FAILED,
-					$this->getDownloadfoldersXPath()
-			);
-		}
-		
+		$result[]=array("uuid"=>"",
+				"name"=>"",
+				"description"=>""
+		);
 		return $result;
 }
     public function setDownloadCategory($params,$context)

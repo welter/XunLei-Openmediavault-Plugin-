@@ -151,6 +151,30 @@ class XunLeiRPC
    	    );
    	    return $this->request("boxSpace",$args);
    }
+   public function urlCheck($url)
+   {
+   	$args=array(
+   			"v"=>2,
+   			"type"=>2,
+   			"callback"=>"''",
+   			"url"=>$url,
+   			"type"=>1
+   	);
+
+   	return $this->request("urlCheck",$args,"GET","","text","text");
+   }
+   public function urlResolve($url)
+   {
+   	$args=array(
+   			"v"=>2,
+   			"ct"=>0,
+   			"callback"=>"''"
+   	);
+   	$postData=array(
+   			"json"=>"{'url':'".$url."'}"
+   	);
+   	return $this->request("urlResolve",$args,"POST",$postData,"application/x-www-form-urlencoded");
+   }
   /**
    * Start one or more torrents
    *
@@ -499,15 +523,16 @@ class XunLeiRPC
    * @param array arguments The request arguments
    * @returns array The request result
    */
-  public function request( $method, $arguments,$verb = 'GET',$contextType='text',$format='json2' )
+  public function request( $method, $arguments,$verb = 'GET',$postData,$contextType='text',$format='json2' )
   {
     // Check the parameters
     //echo func_get_args();
     echo 'verb:'.$verb."\n";
     echo 'contextType:'.$contextType."\n";
     echo 'method:'.$method."\n";
-    echo 'auruments:'.$arguments."\n";
+    echo 'arguments:'.$arguments."\n";
     echo 'format:'.$format."\n";
+    echo 'postData'.$postData."\n";
 //    if ( !is_scalar( $method ) )
  //     throw new XunLeiRPCException( 'Method name has no scalar value', XunLeiRPCException::E_INVALIDARG );
 //    if ( !is_array( $arguments ) )
@@ -526,23 +551,22 @@ class XunLeiRPC
     $contextopts['http']['header']['Accept'] = "*/*";
     $contextopts['http']['header']['Accept-Encoding']='gzip, deflate, sdch';
     $contextopts['http']['header']['Content-type: ']=$contextType;//.'X-Ware-Session-Id: '.$this->session_id."\r\n";
-    $params = http_build_query($arguments);
-    echo "params:".$params."\n";
     $url.='/'.$method;
     if ($verb == 'POST') {
         if ($contextType=='application/json') {
-            $data = json_encode( $arguments );
+            $data = json_encode( $postData);
         }
         else {
-            $data= $params;
+        	$data= http_build_query($postData);
         }
     // Build (and encode) request array
 
-      $cparams['http']['content'] = $data;
-    } else {
-      if (!empty($params)) $url .= '?' . $params;
+      $contextopts['http']['content'] = $data;
+      $contextopts['http']['header']['Content-Length']=strlen($data);
     }
-
+    $params=http_build_query($arguments);
+    echo "params:".$params."\n";
+    if (!empty($params)) $url .= '?' . $params;
     // Setup authentication (if provided)
     if ( $this->username && $this->password )
       $contextopts['http']['header'] .= sprintf( "Authorization: Basic %s\r\n", base64_encode( $this->username.':'.$this->password ) );
@@ -615,8 +639,10 @@ class XunLeiRPC
         default:
         	$r=$response;
     }
+
 //    var_dump($r); 
     return $this->return_as_array ? array(0=>(Object) $r) : $this->cleanResultObject( $r );	// Return the sanitized result
+    //return $r;
   }
 
   /**

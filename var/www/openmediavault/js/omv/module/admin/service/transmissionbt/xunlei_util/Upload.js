@@ -88,7 +88,7 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei_util.Upload", {
 			       	border:false,
 			          items:[{
 			          	xtype:"textarea",
-			          	name: "file1",
+			          	name: "fileUrl",
 			          	labelAlign:"left",
 			          	labelWidth:50,
 			          	width: 500,
@@ -152,6 +152,7 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei_util.Upload", {
                         		    return (record.get('categoryref')==newValue);
                         		});
                         		}
+                        		me.reloadUploadInformation();
                         	}
                         }
             }, me.dfcombo=Ext.create("Ext.form.field.ComboBox",
@@ -341,5 +342,24 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei_util.Upload", {
 			// web server.
 		}
 		OMV.MessageBox.error(null, msg);
-	}
-});
+	},
+    reloadUploadInformation : function (){
+    	    var me=this;
+    	    url={"url":me.tab1.getForm().findField('fileUrl').getValue()};
+    		OMV.Rpc.request({
+			scope: me,
+			callback: function (tt) {
+                me.downloadcategorygrid.getStore().reload();
+                },
+			rpcData: {
+				service: "XunLei",
+				method: "urlCheck",
+				params: {
+//					uuid: record.get("uuid")
+                    url
+				}
+			}
+		});
+    }
+}
+);

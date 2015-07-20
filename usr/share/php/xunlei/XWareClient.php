@@ -95,5 +95,14 @@ class XWareClient implements IXWareClient
     {
     	$this->rpc->openLixianChannel($jobId);
     }
+    public function urlCheck($url){
+    	$result=json_decode(substr($this->rpc->urlCheck($url)[0],7,-1));
+    	//return $result-;
+    	return array(
+    			"name"=>$result->taskInfo->name,
+    			"size"=>$result->taskInfo->size
+    	);
+    	
+    }
 }
 

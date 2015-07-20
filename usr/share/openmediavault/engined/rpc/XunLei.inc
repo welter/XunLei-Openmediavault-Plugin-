@@ -106,6 +106,7 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
          $this->registerMethod("getDownloadCategory");
          $this->registerMethod("setDownloadCategory");
          $this->registerMethod("deleteDownloadCategory");
+         $this->registerMethod("urlCheck");
         $this->registerMethod("uploadTorrent");
         $this->registerMethod("deleteTorrent");
         $this->registerMethod("pauseTorrent");
@@ -773,6 +774,27 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
          $client->openLixianChannel($params["id"]);
     }
 
+    public function urlCheck($params,$context)
+    {
+    	global $xmlConfig;
+    	
+    	// Validate the RPC caller context.
+    	$this->validateMethodContext($context, array(
+    			"role" => OMV_ROLE_ADMINISTRATOR
+    	));
+    	$this->validateMethodParams($params,
+    			'{
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string"
+                    }
+                }
+            }'
+    	);
+    	$client = $this->xwareClientFactory();
+    	return $client->urlCheck($params["url"]);    	
+    }
     /**
      * Get scheduling settings.
      *

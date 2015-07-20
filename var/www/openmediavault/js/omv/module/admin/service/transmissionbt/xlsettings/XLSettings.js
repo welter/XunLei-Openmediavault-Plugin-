@@ -463,7 +463,6 @@ Ext.define("OMV.module.admin.service.transmissionbt.xlsettings.XLSettings", {
             //code
             uuids[i] ={"uuid":records[i].get("uuid")};
         }
-        var param={"uuids":uuids};
 		OMV.Rpc.request({
 			scope: me,
 			callback: function () {

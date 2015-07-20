@@ -30,4 +30,5 @@ interface IXwareClient
     public function queueMove($torrent, $action);
     public function openVipChannel($jobId);
     public function openLixianChannel($jobId);
+    public function urlCheck($url);
 }

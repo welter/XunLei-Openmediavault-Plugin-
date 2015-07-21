@@ -96,7 +96,29 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei_util.Upload", {
 			             labelStyle: "vertical-align : middle",
 					      fieldLabel: _("File"),
 //					      allowBlank: false
-			          },{
+			          },me.fileList1=Ext.create("Ext.grid.Panel",{
+			          	xtype:"grid",
+                        selModel: {
+                        injectCheckbox: 0,
+                    //type: "rowmodel",
+		                allowDeselect: true,
+		                mode: "MULTI",
+                        checkOnly: true     //只能通过checkbox选择
+                        },
+                        hidden:true,
+                        selType: "checkboxmodel",
+                        store:me.fileListStore1=Ext.create("OMV.data.Store", {
+				        autoLoad: false,
+				        model:Ext.create("Ext.data.Model",{fields: [
+                               {name: 'name',    type: 'string'},
+                               {name: 'size',  type: 'string'},
+                               {name: 'type', type: 'string' }]})
+                        }),
+			          	columns:[
+			          	{text:_("name"),dataIndex:"name"},
+			          	{text:_("size"),dataIndex:"size"},
+			          	{text:_("type"),dataIndex:"type"}]
+			          }),{
 			          	xtype:"fieldset",
 			          	layout: "column",
 			          	border: 0,
@@ -345,11 +367,18 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei_util.Upload", {
 	},
     reloadUploadInformation : function (){
     	    var me=this;
-    	    url={"url":me.tab1.getForm().findField('fileUrl').getValue()};
+    	    url=me.tab1.getForm().findField('fileUrl').getValue();
+    	    if (url.replace(/(^\s*)|(\s*$)/g, "")!='')
+    	    {
     		OMV.Rpc.request({
 			scope: me,
-			callback: function (tt) {
-                me.downloadcategorygrid.getStore().reload();
+			callback: function (p1,p2,p3) {
+				me.fileListStore1.removeAll();
+                me.fileListStore1.add({"name":p3.name,"size":p3.size,"type":p3.type});
+                me.hide();
+                me.fileList1.show();
+                me.setHeight(330+me.fileList1.getHeight());
+                me.show();
                 },
 			rpcData: {
 				service: "XunLei",
@@ -359,7 +388,15 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei_util.Upload", {
                     url
 				}
 			}
-		});
+		})
+    	    }
+    	    else
+    	    {
+    	    	me.hide();
+    	    	me.fileList1.hide();
+    	    	me.setHeight(330);
+    	    	me.show();
+    	    };
     }
 }
 );

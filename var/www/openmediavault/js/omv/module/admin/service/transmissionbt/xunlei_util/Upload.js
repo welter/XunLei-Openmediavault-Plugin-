@@ -20,6 +20,7 @@
  */
 // require("js/omv/window/Window.js")
 // require("js/omv/form/Panel.js")
+//require("js/omv/module/admin/service/transmissionbt/xunlei_util/fileList.js")
 
 /**
  * @ingroup webgui
@@ -46,7 +47,8 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei_util.Upload", {
 	modal: true,
 	buttonAlign: "center",
 	resizable:false,
-
+    neededSpace:0,
+    totalSpace:0,
 	constructor: function() {
 		var me = this;
 		me.callParent(arguments);
@@ -94,31 +96,15 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei_util.Upload", {
 			          	width: 500,
 			             height:100,
 			             labelStyle: "vertical-align : middle",
-					      fieldLabel: _("File"),
+					     fieldLabel: _("File"),
+					     listeners:{
+					     	change: function (obj, newValue, oldValue, eOpts){
+					     		me.loadUrlInformation(newValue);
+					     	}
+					     }
 //					      allowBlank: false
-			          },me.fileList1=Ext.create("Ext.grid.Panel",{
-			          	xtype:"grid",
-                        selModel: {
-                        injectCheckbox: 0,
-                    //type: "rowmodel",
-		                allowDeselect: true,
-		                mode: "MULTI",
-                        checkOnly: true     //只能通过checkbox选择
-                        },
-                        hidden:true,
-                        selType: "checkboxmodel",
-                        store:me.fileListStore1=Ext.create("OMV.data.Store", {
-				        autoLoad: false,
-				        model:Ext.create("Ext.data.Model",{fields: [
-                               {name: 'name',    type: 'string'},
-                               {name: 'size',  type: 'string'},
-                               {name: 'type', type: 'string' }]})
-                        }),
-			          	columns:[
-			          	{text:_("name"),dataIndex:"name"},
-			          	{text:_("size"),dataIndex:"size"},
-			          	{text:_("type"),dataIndex:"type"}]
-			          }),{
+			          },me.fileList1=Ext.create("OMV.module.admin.service.transmissionbt.xunlei_util.fileList"
+			          ),{
 			          	xtype:"fieldset",
 			          	layout: "column",
 			          	border: 0,
@@ -130,7 +116,7 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei_util.Upload", {
 			            labelWidth:50,
 			            name: "category",
 			            width:180,
-			            fieldLabel: _("filepath"),
+			            fieldLabel: _("downloadpath"),
 			                        emptyText: _("Select a category"),
                         allowNone: true,
 			            allowBlank: true,
@@ -174,7 +160,7 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei_util.Upload", {
                         		    return (record.get('categoryref')==newValue);
                         		});
                         		}
-                        		me.reloadUploadInformation();
+                        		me.reloadDownloadPath();
                         	}
                         }
             }, me.dfcombo=Ext.create("Ext.form.field.ComboBox",
@@ -188,6 +174,11 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei_util.Upload", {
                         triggerAction: "all",
                         displayField: "name",
                         valueField: "uuid",
+                        listeners:{
+                        	change: function ( obj, newValue){
+                        		me.reloadSpaceInformation(newValue);
+                        	}
+                        },
                         tpl:'<tpl for=".">' +  
                                '<div class="x-boundlist-item" style="height:20px;">' +  
                                '{name}&nbsp' +  
@@ -224,11 +215,12 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei_util.Upload", {
      		  	})
 			            }),{
 			            xtype:"textfield",
-			            name:"path3",
+			            name:"path",
 			            width:130,
 			            }]
-			          	},{
+			          	},me.downloadPath=Ext.create("Ext.form.Label",{
 			          		xtype:"label",
+			          		name:"downloadPath",
 			          		text:"test/teset/tet",
 			          		margin:"0 0 0 0",
 			          		padding:"0 0 0 0",
@@ -240,36 +232,26 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei_util.Upload", {
 			          			left:"55px"
 			          		},
 			          		editable:false
-			          	},{
+			          	}),{
 			          	xtype:"fieldset",
 			          	layout:"hbox",
 			          	margin:"10px 0 0 0",
 			          	padding:"0 0 0 0",
 			          	border:0,
-			          	items:[{
-			            xtype:"label",
-//			            region:"west",
-//			            anchor:"0 0",
+			          	items:[me.neededSpaceLabel=Ext.create("Ext.form.Label",{
 			            margin:"5px 0 0 0",		            
-			            text:"所需空间"
-			            },{
+			            text:"所需空间: "+me.htmlSpace(20)+"剩余空间:",
+//			            width:350,
+			            })/*,{
 			            xtype:"panel",
 			            border:0,
 			            height:20,
-			            width:200
-			            },{
-			            xtype:"label",
-//			            region:"east",
-//			            anchor: "-1 0",
+			            width:400
+			            },me.totalSpaceLabel=Ext.create("Ext.form.Label",{
 			            margin:"5px 0 0 0",
-			            style:{
-			            	top: "5px"
-			            },
 			            text:"剩余空间"
-			            }]
-			          	},{
-			          	xtype:"progressbar"
-			          	}
+			            })*/]
+			          	},me.spaceUsage=Ext.create("Ext.ProgressBar")
 			          ]
 			       }
 			   )]},{
@@ -365,16 +347,16 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei_util.Upload", {
 		}
 		OMV.MessageBox.error(null, msg);
 	},
-    reloadUploadInformation : function (){
+    loadUrlInformation: function(value){
     	    var me=this;
-    	    url=me.tab1.getForm().findField('fileUrl').getValue();
+    	    url=value;
     	    if (url.replace(/(^\s*)|(\s*$)/g, "")!='')
     	    {
     		OMV.Rpc.request({
 			scope: me,
 			callback: function (p1,p2,p3) {
-				me.fileListStore1.removeAll();
-                me.fileListStore1.add({"name":p3.name,"size":p3.size,"type":p3.type});
+				me.neededSpace=parseInt(p3.size);
+                me.fileList1.loadData([{"name":p3.name,"size":p3.size,"type":p3.type}]);
                 me.hide();
                 me.fileList1.show();
                 me.setHeight(330+me.fileList1.getHeight());
@@ -397,6 +379,31 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei_util.Upload", {
     	    	me.setHeight(330);
     	    	me.show();
     	    };
+    },
+    reloadDownloadPath: function(){
+    },
+    reloadSpaceInformation : function (value){
+    	    var me=this;
+//    	    var a=me.dfcombo.getModelData();
+    	     me.totalSpace=me.dfcombo.getStore().findRecord("uuid",value).data.available;
+    	     var text=_("totalSpace")+":"+ OMV.module.admin.service.transmissionbt.xunlei_util.Format.bytesToSize(me.totalSpace)+
+    	           _("neededSpace")+":"+ OMV.module.admin.service.transmissionbt.xunlei_util.Format.bytesToSize(me.neededSpace);
+    	     var sp=new Array(200-text.length).join(" ");
+    	     text=_("totalSpace")+":"+ OMV.module.admin.service.transmissionbt.xunlei_util.Format.bytesToSize(me.totalSpace)+
+    	          +sp+ _("neededSpace")+":"+ OMV.module.admin.service.transmissionbt.xunlei_util.Format.bytesToSize(me.neededSpace);
+    	     me.neededSpaceLabel.setText( text);
+    	     if (me.totalSpace!=0){
+    	     me.spaceUsage.setValue(me.neededSpace/me.totalSpace);}
+    	     else {
+    	     	me.spaceUsage.setValue(0);
+    	     }
+    },
+    htmlSpace:function(len){
+    	var r="";
+    	for(var i=0;i<len;i++){
+    		r=r+"&nbsp;";
+    	};
+    	return r;
     }
 }
 );

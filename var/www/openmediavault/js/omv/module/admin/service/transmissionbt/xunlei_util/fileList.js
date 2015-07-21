@@ -24,8 +24,8 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei_util.fileList",
 			loadData:function(data){
 				var me=this;
 				me.getStore().removeAll();
-				for (var d in data){
-					me.getStore().add({"name":d.name,"size":d.size,"type":d.type});
+				for (var i in data){
+					me.getStore().add({"name":data[i].name,"size":data[i].size,"type":data[i].type});
 				}
 			}
 	}

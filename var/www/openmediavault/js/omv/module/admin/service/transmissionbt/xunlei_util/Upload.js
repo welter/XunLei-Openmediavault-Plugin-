@@ -49,6 +49,8 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei_util.Upload", {
 	resizable:false,
     neededSpace:0,
     totalSpace:0,
+    path:"",
+    downloadFolder:"",
 	constructor: function() {
 		var me = this;
 		me.callParent(arguments);
@@ -176,7 +178,11 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei_util.Upload", {
                         valueField: "uuid",
                         listeners:{
                         	change: function ( obj, newValue){
-                        		me.reloadSpaceInformation(newValue);
+                        		var v=me.dfcombo.getStore().findRecord("uuid",newValue).data;
+                        		me.totalSpace=v.available;
+                        		me.downloadFolder=v.actualfolder;
+                        		me.reloadSpaceInformation();
+                        		me.reloadDownloadPath();
                         	}
                         },
                         tpl:'<tpl for=".">' +  
@@ -217,11 +223,17 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei_util.Upload", {
 			            xtype:"textfield",
 			            name:"path",
 			            width:130,
+			            listeners:{
+			            	change: function(obj,newValue){
+			            		me.path=newValue;
+			            		me.reloadDownloadPath();
+			            	}
+			            }
 			            }]
 			          	},me.downloadPath=Ext.create("Ext.form.Label",{
 			          		xtype:"label",
 			          		name:"downloadPath",
-			          		text:"test/teset/tet",
+			          		text:"",
 			          		margin:"0 0 0 0",
 			          		padding:"0 0 0 0",
 			          		border:0,
@@ -240,17 +252,17 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei_util.Upload", {
 			          	border:0,
 			          	items:[me.neededSpaceLabel=Ext.create("Ext.form.Label",{
 			            margin:"5px 0 0 0",		            
-			            text:"所需空间: "+me.htmlSpace(20)+"剩余空间:",
-//			            width:350,
-			            })/*,{
+//			            html:"所需空间:",
+			            width:390,
+			            })/*,me.spaceLabel=Ext.create("Ext.form.Label",{
 			            xtype:"panel",
 			            border:0,
 			            height:20,
-			            width:400
-			            },me.totalSpaceLabel=Ext.create("Ext.form.Label",{
+			            width:10
+			            })*/,me.totalSpaceLabel=Ext.create("Ext.form.Label",{
 			            margin:"5px 0 0 0",
-			            text:"剩余空间"
-			            })*/]
+//			            text:"剩余空间"
+			            })]
 			          	},me.spaceUsage=Ext.create("Ext.ProgressBar")
 			          ]
 			       }
@@ -273,6 +285,7 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei_util.Upload", {
 			})]
 		});
 		me.callParent(arguments);
+		me.reloadSpaceInformation();
 	},
 
 	/**
@@ -381,17 +394,28 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei_util.Upload", {
     	    };
     },
     reloadDownloadPath: function(){
+    	var me=this;
+    	var  t1=me.downloadFolder;
+    	var t2=me.path;
+    	if (t1!=null&&t2!=null)
+    	           me.downloadPath.setText(me.downloadFolder+"\/"+me.path);
     },
-    reloadSpaceInformation : function (value){
+    reloadSpaceInformation : function (){
     	    var me=this;
-//    	    var a=me.dfcombo.getModelData();
-    	     me.totalSpace=me.dfcombo.getStore().findRecord("uuid",value).data.available;
+/*
     	     var text=_("totalSpace")+":"+ OMV.module.admin.service.transmissionbt.xunlei_util.Format.bytesToSize(me.totalSpace)+
     	           _("neededSpace")+":"+ OMV.module.admin.service.transmissionbt.xunlei_util.Format.bytesToSize(me.neededSpace);
-    	     var sp=new Array(200-text.length).join(" ");
-    	     text=_("totalSpace")+":"+ OMV.module.admin.service.transmissionbt.xunlei_util.Format.bytesToSize(me.totalSpace)+
-    	          +sp+ _("neededSpace")+":"+ OMV.module.admin.service.transmissionbt.xunlei_util.Format.bytesToSize(me.neededSpace);
-    	     me.neededSpaceLabel.setText( text);
+    	     var sp=me.htmlSpace(125-text.length);
+    	     var t=_("totalSpace")+":"+ OMV.module.admin.service.transmissionbt.xunlei_util.Format.bytesToSize(me.neededSpace)
+    	          +sp+ _("neededSpace")+":"+ OMV.module.admin.service.transmissionbt.xunlei_util.Format.bytesToSize(me.totalSpace);
+    	     me.neededSpaceLabel.setText( t,false);*/
+    	    var t1=_("totalSpace")+":"+ OMV.module.admin.service.transmissionbt.xunlei_util.Format.bytesToSize(me.totalSpace);
+    	    var t2=_("neededSpace")+":"+ OMV.module.admin.service.transmissionbt.xunlei_util.Format.bytesToSize(me.neededSpace);
+    	    tm = new Ext.util.TextMetrics(),
+            n = 520-tm.getWidth(t1 + ":");
+            me.neededSpaceLabel.setText(t2);
+            me.neededSpaceLabel.setWidth(n);
+            me.totalSpaceLabel.setText(t1);
     	     if (me.totalSpace!=0){
     	     me.spaceUsage.setValue(me.neededSpace/me.totalSpace);}
     	     else {
@@ -401,7 +425,7 @@ Ext.define("OMV.module.admin.service.transmissionbt.xunlei_util.Upload", {
     htmlSpace:function(len){
     	var r="";
     	for(var i=0;i<len;i++){
-    		r=r+"&nbsp;";
+    		r=r+"&#160;";
     	};
     	return r;
     }

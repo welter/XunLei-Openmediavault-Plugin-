@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!--<script type="application/javascript" src="/extjs/ext-all-debug.js"></script>-->
+    <script type="application/javascript">
+        function createXMLHttpRequest() {
+            var xmlHttp;
+            if (window.XMLHttpRequest) {
+                xmlHttp = new XMLHttpRequest();
+                if (xmlHttp.overrideMimeType)
+                xmlHttp.overrideMimeType('text/xml');
+            }
+            else if (window.ActiveXObject) {
+                try {
+                        xmlHttp = new ActiveXObject("Msxml2.XMLHTTP");
+                }
+                catch (e) {
+                    try {
+                            xmlHttp = new ActiveXObject("Microsoft.XMLHTTP");
+                    } catch (e) {}
+                }
+            }
+            return xmlHttp;
+        }
+        function callback(params)
+        {
+            R=createXMLHttpRequest();
+            var url ="http://172.18.1.6:9010/omv-xunlei4.php";
+            R.open("POST", url,false);
+            R.setRequestHeader("Content-Type","application/x-www-form-urlencoded;");
+            R.send(JSON.stringify(params));
+            alert("ok");
+        }
+        function gg()
+        {
+
+            var data={
+                username:'welterlam',
+                password:'cljk1974',
+                captcha:xlQuickLogin.Util.getCookie('check_result').slice(2)
+            };
+            a=xlQuickLogin.Request("login",data,callback);
+
+        }
+    </script>
+    <script type="application/javascript" src="js/json2.js"></script>
+    <script type="application/javascript" src="js/md5.js"></script>
+    <script type="application/javascript" src="js/rsa.js"></script>
+    <script type="application/javascript" src="js/xlQuickLogin.min.js"></script>
+    
+    
+    
+<title>Welcome to nginx on Debian!</title>
+<style>
+    body {
+        width: 35em;
+        margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif;
+    }
+</style>
+</head>
+<body>
+    <iframe id="proxy" src="http://172.18.1.6:9010/omv-xunlei3.php" style="display:none" > </iframe>
+<h1>Welcome to nginx on Debian!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working on Debian. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a></p>
+
+<p>
+      Please use the <tt>reportbug</tt> tool to report bugs in the
+      nginx package with Debian. However, check <a
+      href="http://bugs.debian.org/cgi-bin/pkgreport.cgi?ordering=normal;archive=0;src=nginx;repeatmerged=0">existing
+      bug reports</a> before reporting a new bug.
+</p>
+
+<p><em>Thank you for using debian and nginx.</em></p>
+
+<button type="button" onclick=gg()>Click Me!</button>
+</body>
+</html>

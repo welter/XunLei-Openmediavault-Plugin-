@@ -550,7 +550,7 @@ class XunLeiRPC
     $contextopts['http']['method'] = $verb;
     $contextopts['http']['header']['Accept'] = "*/*";
     $contextopts['http']['header']['Accept-Encoding']='gzip, deflate, sdch';
-    $contextopts['http']['header']['Content-type: ']=$contextType;//.'X-Ware-Session-Id: '.$this->session_id."\r\n";
+    $contextopts['http']['header']['Content-type']=$contextType;//.'X-Ware-Session-Id: '.$this->session_id."\r\n";
     $url.='/'.$method;
     if ($verb == 'POST') {
         if ($contextType=='application/json') {

@@ -28,6 +28,7 @@ require_once "openmediavault/rpc.inc";
 require_once "openmediavault/util.inc";
 require_once "xunlei/IXWareClient.php";
 require_once "xunlei/XWareClient.php";
+require_once "xunlei/rsa.php";
 
 class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
 {
@@ -107,6 +108,7 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
          $this->registerMethod("setDownloadCategory");
          $this->registerMethod("deleteDownloadCategory");
          $this->registerMethod("urlCheck");
+         $this->registerMethod("xunleiLogin");
         $this->registerMethod("uploadTorrent");
         $this->registerMethod("deleteTorrent");
         $this->registerMethod("pauseTorrent");
@@ -794,6 +796,90 @@ class OMVRpcServiceXunLei extends OMVRpcServiceAbstract
     	);
     	$client = $this->xwareClientFactory();
     	return $client->urlCheck($params["url"]);    	
+    }
+    public function xunleiLogin($params,$context){
+    /*	$url="https://login.xunlei.com/check/?u=welterlam&business_type=113&cachetime=1438220280532&";
+    	    	$contextopts['http']['header']['User-Agent:'] ="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/43.0.2357.130 Chrome/43.0.2357.130 Safari/537.36
+    	\r\n";
+    	$contextopts['http']['method'] ="GET";
+    	$contextopts['http']['header']['Accept'] = "*\/*\r\n";
+    	$contextopts['http']['header']['Accept-Encoding']='gzip, deflate, sdch\r\n';
+    	$contextopts['http']['header']['Connection: ']="keep-alive\r\n";
+    	$contextopts['http']['header']['Content-type: ']='application/json\r\n';
+    	$contextopts['http']['header']['Cookie: ']="_x_t_=0\r\n";
+    	$con = stream_context_create( $contextopts );
+    	if ( $fp = fopen( $url, 'rb' , false,$con) ) {	
+    		$response=fgets($fp);
+    		$stream_meta = stream_get_meta_data( $fp );
+    	}
+    	$cookies=array(	);
+    	//return $stream_meta;
+    	foreach($stream_meta['wrapper_data'] as $d)
+    	{
+    		if (substr($d,0,11)==='Set-Cookie:'){
+    			$s=substr($d,12);//return $s;
+    			$c=explode('=',$s,2);
+    			$c[1]=urldecode(substr($c[1],0,strpos($c[1],';')));
+    			$cookies[$c[0]]=$c[1];
+    		}
+    	}
+    	$key=Zeal_Security_RSAPublicKey::getPublicKeyFromModExp(base64_decode($cookies['check_n']),base64_decode($cookies['check_e']));
+    	//$key=Zeal_Security_RSAPublicKey::getPublicKeyFromModExp(base64_decode("olzpoXuqOFt1d0DUk3pZHf4nzjCxr%2bp68fhwn4xbZUW3HgiMC%2bkzAH28rfjb5TZ2UZyvJdCLw%2bAREHQHfan2llkI55sDj3BR7R3oTm%2b4gE9fchtfMC7GHQUxHDXD5d%2bw0K3bKfxov%2fcbgiuu9qQju90DtMuKXYNc%2foEfUX8gi%2fM%3d"),base64_decode("AQAB"));
+    	$rsa=new RSA($key);
+    	$code=substr($cookies['check_result'],2);
+    	unset($cookies['check_result']);
+    	$pwd= $rsa->encrypt(md5('cljk1974').$code);
+    	//return md5("cljk1974").$code;
+    	$params['p']=$pwd;
+    	$params['u']="welterlam";
+    	$params['n']=$cookies['check_n'];
+    	$params['e']=$cookies['check_e'];
+    	$params['verifycode']=$code;
+    	$params['login_enable']="1";
+    	$params['business_type']="113";
+    	$params['v']='100';
+    	$params['cachetime']='1438220280663';*/
+    	$url="https://login.xunlei.com/sec2login/";
+    	$contextopts['http']['header']['User-Agent:'] ="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/43.0.2357.130 Chrome/43.0.2357.130 Safari/537.36
+    	\r\n";
+    	$contextopts['http']['method'] ="POST";
+    	$contextopts['http']['header']['Accept'] = "*/*\r\n";
+    	$contextopts['http']['header']['Accept-Encoding']='gzip, deflate, sdch\r\n';
+    	$contextopts['http']['header']['Connection: ']="keep-alive\r\n";
+    	$contextopts['http']['header']['Content-type: ']='application/x-www-form-urlencoded\r\n';
+    	$contextopts['http']['header']['Referer ']="http://i.xunlei.com/login/2.5/?r_d=1";
+    	$contextopts['http']['header']['Origin ']="http://i.xunlei.com";
+    	//$contextopts['http']['header']['Cookie: ']="_x_t_=0";
+    	$contextopts['http']['header']['Cookie: ']="_x_t_=0; check_e=AQAB; check_n=olzpoXuqOFt1d0DUk3pZHf4nzjCxr%2Bp68fhwn4xbZUW3HgiMC%2BkzAH28rfjb5TZ2UZyvJdCLw%2BAREHQHfan2llkI55sDj3BR7R3oTm%2B4gE9fchtfMC7GHQUxHDXD5d%2Bw0K3bKfxov%2Fcbgiuu9qQju90DtMuKXYNc%2FoEfUX8gi%2FM%3D; verify_type=SEA; VERIFY_KEY=493AFE7DE417798CF4A0FE8AC9EB04E6; check_info=200:verify";
+    	//foreach ($cookies as $n=>$v)
+    	//{
+    	//$contextopts['http']['header']['Cookie: ']=$contextopts['http']['header']['Cookie: '].';'.urlencode($n).'='.urlencode($v);
+    	//}
+    	//$data=http_build_query($params);
+    	$contextopts['http']['content']="p=e%2BOV7Gs%2FTtb9zZTLJfPfY2B2%2FzoKKrSnwAxUOGsNeePbBPMeYQm8csWx3sUFTmwi1xhtpJOyhPugA%2BJwEUzQMbQtSGoY20pHx5fL8hLJqlconF6tkyZx41iAKoKULG3YzwUE5ZnWhkwTANGkOxOeh%2F%2BEq6JLdrM%2BPD7KiOMRZhU%3D&u=welterlam&n=olzpoXuqOFt1d0DUk3pZHf4nzjCxr%2Bp68fhwn4xbZUW3HgiMC%2BkzAH28rfjb5TZ2UZyvJdCLw%2BAREHQHfan2llkI55sDj3BR7R3oTm%2B4gE9fchtfMC7GHQUxHDXD5d%2Bw0K3bKfxov%2Fcbgiuu9qQju90DtMuKXYNc%2FoEfUX8gi%2FM%3D&e=AQAB&verifycode=%21Paw&login_enable=0&business_type=113&v=100&cachetime=1438220280663";
+    	$contextopts['http']['header']['Content-Length']=strlen("p=e%2BOV7Gs%2FTtb9zZTLJfPfY2B2%2FzoKKrSnwAxUOGsNeePbBPMeYQm8csWx3sUFTmwi1xhtpJOyhPugA%2BJwEUzQMbQtSGoY20pHx5fL8hLJqlconF6tkyZx41iAKoKULG3YzwUE5ZnWhkwTANGkOxOeh%2F%2BEq6JLdrM%2BPD7KiOMRZhU%3D&u=welterlam&n=olzpoXuqOFt1d0DUk3pZHf4nzjCxr%2Bp68fhwn4xbZUW3HgiMC%2BkzAH28rfjb5TZ2UZyvJdCLw%2BAREHQHfan2llkI55sDj3BR7R3oTm%2B4gE9fchtfMC7GHQUxHDXD5d%2Bw0K3bKfxov%2Fcbgiuu9qQju90DtMuKXYNc%2FoEfUX8gi%2FM%3D&e=AQAB&verifycode=%21yTf&login_enable=0&business_type=113&v=100&cachetime=1438220280663");
+    	$c['http']['header']="Connection: keep-alive
+Content-Length: 483
+Cache-Control: max-age=0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+Origin: http://i.xunlei.com
+X-FirePHP-Version: 0.0.6
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/43.0.2357.130 Chrome/43.0.2357.130 Safari/537.36
+Content-Type: application/x-www-form-urlencoded
+Referer: http://i.xunlei.com/login/2.5/?r_d=1
+Accept-Encoding: gzip, deflate
+Accept-Language: zh-CN,zh;q=0.8
+Cookie: _x_t_=0; check_e=AQAB; check_n=olzpoXuqOFt1d0DUk3pZHf4nzjCxr%2Bp68fhwn4xbZUW3HgiMC%2BkzAH28rfjb5TZ2UZyvJdCLw%2BAREHQHfan2llkI55sDj3BR7R3oTm%2B4gE9fchtfMC7GHQUxHDXD5d%2Bw0K3bKfxov%2Fcbgiuu9qQju90DtMuKXYNc%2FoEfUX8gi%2FM%3D; verify_type=SEA; VERIFY_KEY=9A9CE0804A616F86D19C6D36FE4E6834; check_info=200:verify";
+$c['http']['method']="POST";
+$c['http']['content']="p=e%2BOV7Gs%2FTtb9zZTLJfPfY2B2%2FzoKKrSnwAxUOGsNeePbBPMeYQm8csWx3sUFTmwi1xhtpJOyhPugA%2BJwEUzQMbQtSGoY20pHx5fL8hLJqlconF6tkyZx41iAKoKULG3YzwUE5ZnWhkwTANGkOxOeh%2F%2BEq6JLdrM%2BPD7KiOMRZhU%3D&u=welterlam&n=olzpoXuqOFt1d0DUk3pZHf4nzjCxr%2Bp68fhwn4xbZUW3HgiMC%2BkzAH28rfjb5TZ2UZyvJdCLw%2BAREHQHfan2llkI55sDj3BR7R3oTm%2B4gE9fchtfMC7GHQUxHDXD5d%2Bw0K3bKfxov%2Fcbgiuu9qQju90DtMuKXYNc%2FoEfUX8gi%2FM%3D&e=AQAB&verifycode=%21LNf&login_enable=0&business_type=113&v=100&cachetime=1438220280663";
+    	//return $contextopts;
+    	$con = stream_context_create( $c );
+    	if ( $fp = fopen( $url, 'r' , false,$con) ) {
+    		$response=fgets($fp);
+    		$stream_meta = stream_get_meta_data( $fp );
+    	}
+    	//$cookies['pwd']=$pwd;
+    	return $stream_meta;
     }
     /**
      * Get scheduling settings.
